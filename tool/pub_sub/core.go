@@ -4,14 +4,17 @@ import (
 	"github.com/501miles/logger"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/streadway/amqp"
+	"github.com/tidwall/gjson"
 	"go-tiny/tool/mq/rabbit"
+	"reflect"
+	"time"
 )
 
 const (
 	ExchangeName = "Go-Sub-Pub-Exchange"
 )
 
-func Subscribe(topic string, dataChan chan interface{}) {
+func Subscribe(topic string, dataChan chan interface{}, args ...interface{}) {
 	ch := rabbit.GetChan()
 	err := ch.ExchangeDeclare(
 		ExchangeName,
@@ -29,7 +32,7 @@ func Subscribe(topic string, dataChan chan interface{}) {
 
 	q, err := ch.QueueDeclare(
 		"",
-		false,
+		true,
 		false,
 		true,
 		false,
@@ -54,7 +57,7 @@ func Subscribe(topic string, dataChan chan interface{}) {
 	msgs, err := ch.Consume(
 		q.Name,
 		"",
-		true,
+		false,
 		false,
 		false,
 		false,
@@ -64,13 +67,25 @@ func Subscribe(topic string, dataChan chan interface{}) {
 		logger.Error(err)
 	}
 
-	logger.Info("aaaa")
-	logger.Info(dataChan)
 	for d := range msgs {
-		logger.Info("收到消息d", d)
-		dataChan <- d.Body
-		logger.Info("aa")
+		logger.Info("收到消息并转发:", string(d.Body))
+		var result interface{}
+		if len(args) > 0 {
+			m := args[0]
+			obj := reflect.New(reflect.TypeOf(m)).Interface()
+			err = jsoniter.Unmarshal(d.Body, &obj)
+			if err != nil {
+				logger.Error(err)
+			}
+			result = reflect.ValueOf(obj).Elem().Interface()
+			//result = covertDataToType(d.Body, m)
+		} else {
+			result = d.Body
+		}
+		dataChan <- result
 	}
+	logger.Info("订阅结束")
+	close(dataChan)
 }
 
 func Publish(topic string, data interface{}) error {
@@ -96,9 +111,88 @@ func Publish(topic string, data interface{}) error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        body,
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "text/plain",
+			Body:         body,
 		},
 	)
+	if err != nil {
+		logger.Error(err)
+	}
+	returnChan := make(chan amqp.Return)
+	ch.NotifyReturn(returnChan)
+
+	go func() {
+		for {
+			select {
+			case d := <-returnChan:
+				logger.Info("收到return消息")
+				logger.Info(d.ReplyCode)
+				logger.Info(d.ReplyText)
+				logger.Info(d.Exchange)
+				logger.Info(d.RoutingKey)
+				logger.Info(d.Headers)
+				logger.Info(string(d.Body))
+				//dataChan <- d.Body
+				logger.Info("aa")
+			case <-time.After(10 * time.Second):
+				logger.Info("超时10秒")
+				close(returnChan)
+				return
+			}
+		}
+	}()
 	return err
+}
+
+func covertDataToType(data []byte, m interface{}) interface{} {
+	mType := reflect.TypeOf(m)
+	logger.Warn(mType.Kind())
+	switch mType.Kind() {
+	//case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64,:
+
+	case reflect.Ptr:
+		logger.Debug("是指针类型")
+		obj := reflect.New(mType.Elem()).Interface()
+		err := jsoniter.Unmarshal(data, &obj)
+		if err != nil {
+			logger.Error(err)
+		}
+		return obj
+	case reflect.Struct:
+		logger.Debug("是结构体类型")
+		obj := reflect.New(mType).Interface()
+		err := jsoniter.Unmarshal(data, &obj)
+		if err != nil {
+			logger.Error(err)
+		}
+		return reflect.ValueOf(obj).Elem().Interface()
+	case reflect.Array, reflect.Slice:
+		logger.Debug("是数组\\切片类型")
+		typ := mType.Elem()
+		obj := reflect.New(reflect.SliceOf(typ).Elem()).Interface()
+		var resp []interface{}
+		arr := gjson.ParseBytes(data).Array()
+		for _, it := range arr {
+			logger.Info(it.String())
+			resp = append(resp, covertDataToType([]byte(it.String()), obj))
+		}
+		return resp
+	case reflect.Map:
+		logger.Debug("是字典类型")
+		var resp map[string]interface{}
+		err := jsoniter.Unmarshal(data, &resp)
+		if err != nil {
+			logger.Error(err)
+		}
+		return resp
+
+	default:
+		obj := reflect.New(mType).Interface()
+		err := jsoniter.Unmarshal(data, &obj)
+		if err != nil {
+			logger.Error(err)
+		}
+		return reflect.ValueOf(obj).Elem().Interface()
+	}
 }
