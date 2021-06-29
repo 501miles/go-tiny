@@ -14,78 +14,97 @@ const (
 	ExchangeName = "Go-Sub-Pub-Exchange"
 )
 
-func Subscribe(topic string, dataChan chan interface{}, args ...interface{}) {
-	ch := rabbit.GetChan()
-	err := ch.ExchangeDeclare(
-		ExchangeName,
-		"topic",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+type ReSendMsg struct {
+	RetryTimes uint8
+	NextRetryTime int64
+	Data interface{}
+}
 
-	if err != nil {
-		logger.Error(err)
-	}
+func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args ...interface{}) {
+	go func() {
+		ch := rabbit.GetChan()
+		err := ch.ExchangeDeclare(
+			ExchangeName,
+			"topic",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
 
-	q, err := ch.QueueDeclare(
-		"",
-		true,
-		false,
-		true,
-		false,
-		nil,
-	)
-
-	if err != nil {
-		logger.Error(err)
-	}
-
-	err = ch.QueueBind(
-		q.Name,
-		topic,
-		ExchangeName,
-		false,
-		nil,
-	)
-	if err != nil {
-		logger.Error(err)
-	}
-
-	msgs, err := ch.Consume(
-		q.Name,
-		"",
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		logger.Error(err)
-	}
-
-	for d := range msgs {
-		logger.Info("收到消息并转发:", string(d.Body))
-		var result interface{}
-		if len(args) > 0 {
-			m := args[0]
-			obj := reflect.New(reflect.TypeOf(m)).Interface()
-			err = jsoniter.Unmarshal(d.Body, &obj)
-			if err != nil {
-				logger.Error(err)
-			}
-			result = reflect.ValueOf(obj).Elem().Interface()
-			//result = covertDataToType(d.Body, m)
-		} else {
-			result = d.Body
+		if err != nil {
+			logger.Error(err)
 		}
-		dataChan <- result
-	}
-	logger.Info("订阅结束")
-	close(dataChan)
+
+		q, err := ch.QueueDeclare(
+			"",
+			true,
+			false,
+			true,
+			false,
+			nil,
+		)
+
+		if err != nil {
+			logger.Error(err)
+		}
+
+		err = ch.QueueBind(
+			q.Name,
+			topic,
+			ExchangeName,
+			false,
+			nil,
+		)
+		if err != nil {
+			logger.Error(err)
+		}
+
+		msgs, err := ch.Consume(
+			q.Name,
+			"",
+			false,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			logger.Error(err)
+		}
+
+		for {
+			select {
+			case d := <- msgs:
+				logger.Debug(jsoniter.MarshalToString(d))
+				var result interface{}
+				if d.Exchange == "" || len(d.Body) == 0 {
+					continue
+				}
+				if len(args) > 0 {
+					m := args[0]
+					obj := reflect.New(reflect.TypeOf(m)).Interface()
+					err = jsoniter.Unmarshal(d.Body, &obj)
+					if err != nil {
+						logger.Error(err)
+					}
+					result = reflect.ValueOf(obj).Elem().Interface()
+				} else {
+					result = d.Body
+				}
+				dataChan <- result
+			case <- done:
+				logger.Info("收到结束订阅消息")
+				goto END
+			}
+		}
+
+	END:
+		logger.Info("订阅结束")
+		close(dataChan)
+		close(done)
+	}()
 }
 
 func Publish(topic string, data interface{}) error {
@@ -136,13 +155,17 @@ func Publish(topic string, data interface{}) error {
 				//dataChan <- d.Body
 				logger.Info("aa")
 			case <-time.After(10 * time.Second):
-				logger.Info("超时10秒")
-				close(returnChan)
+				//logger.Info("超时10秒")
+				//close(returnChan)
 				return
 			}
 		}
 	}()
 	return err
+}
+
+func covertDataToType2(data []byte, m interface{}) interface{} {
+	return nil
 }
 
 func covertDataToType(data []byte, m interface{}) interface{} {
