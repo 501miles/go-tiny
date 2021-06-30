@@ -79,12 +79,22 @@ func (t *Timeline) processOnce() {
 	}
 }
 
+func (t *Timeline) RegisterInt(tm int64, f func()) int64 {
+	tm2 := time.Unix(tm, 0)
+	return t.Register(tm2, f)
+}
+
 func (t *Timeline) Register(tm time.Time, f func()) int64 {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	id := snowflake.GenInt64()
-	t0 := float64(tm.UnixNano()) * 0.000000001
-	t1 := int64(math.Ceil(t0))
+	t1 := int64(0)
+	if tm.Sub(time.Now()) <= 0 {
+		t1 = time.Now().Unix() + 1
+	} else {
+		t0 := float64(tm.UnixNano()) * 0.000000001
+		t1 = int64(math.Ceil(t0))
+	}
 	tDict, _ := t.JobDict[t1]
 	if tDict == nil {
 		tDict = map[int64]func(){}
