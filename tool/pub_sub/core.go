@@ -1,11 +1,11 @@
 package pub_sub
 
 import (
+	"github.com/501miles/go-tiny/tool/mq/rabbit"
 	"github.com/501miles/logger"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
-	"go-tiny/tool/mq/rabbit"
 	"reflect"
 	"time"
 )
@@ -15,9 +15,9 @@ const (
 )
 
 type ReSendMsg struct {
-	RetryTimes uint8
+	RetryTimes    uint8
 	NextRetryTime int64
-	Data interface{}
+	Data          interface{}
 }
 
 func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args ...interface{}) {
@@ -76,7 +76,7 @@ func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args
 
 		for {
 			select {
-			case d := <- msgs:
+			case d := <-msgs:
 				logger.Debug(jsoniter.MarshalToString(d))
 				var result interface{}
 				if d.Exchange == "" || len(d.Body) == 0 {
@@ -94,7 +94,7 @@ func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args
 					result = d.Body
 				}
 				dataChan <- result
-			case <- done:
+			case <-done:
 				logger.Info("收到结束订阅消息")
 				goto END
 			}

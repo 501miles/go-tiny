@@ -1,4 +1,4 @@
-module go-tiny
+module github.com/501miles/go-tiny
 
 go 1.16
 

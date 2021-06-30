@@ -2,8 +2,8 @@ package timeline
 
 import (
 	"errors"
-	"go-tiny/tool/gen_id/snowflake"
-	"go-tiny/tool/time_tool"
+	"github.com/501miles/go-tiny/tool/gen_id/snowflake"
+	"github.com/501miles/go-tiny/tool/time_tool"
 	"math"
 	"sync"
 	"time"
@@ -31,10 +31,10 @@ func CreateTimeline(index uint16, gap time.Duration) (*Timeline, error) {
 		return nil, TIMELINE_ERROR_ALREADY_STARTED
 	}
 	timeline := &Timeline{
-		Id:      index,
-		JobDict: make(map[int64]map[int64]func()),
+		Id:       index,
+		JobDict:  make(map[int64]map[int64]func()),
 		JobIndex: make(map[int64]int64),
-		Gap: gap,
+		Gap:      gap,
 	}
 	timelineDict[index] = timeline
 	return timeline, nil
@@ -74,12 +74,12 @@ func (t *Timeline) processOnce() {
 			}()
 			time.Sleep(7 * time.Millisecond)
 		}
-	}else{
+	} else {
 		t.lock.Unlock()
 	}
 }
 
-func (t *Timeline)Register(tm time.Time, f func()) int64 {
+func (t *Timeline) Register(tm time.Time, f func()) int64 {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	id := snowflake.GenInt64()
@@ -95,7 +95,7 @@ func (t *Timeline)Register(tm time.Time, f func()) int64 {
 	return id
 }
 
-func (t *Timeline)UnRegister(id int64) {
+func (t *Timeline) UnRegister(id int64) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	indexId, _ := t.JobIndex[id]
@@ -103,7 +103,7 @@ func (t *Timeline)UnRegister(id int64) {
 		subDict, _ := t.JobDict[indexId]
 		if len(subDict) == 1 {
 			delete(t.JobDict, indexId)
-		}else{
+		} else {
 			delete(t.JobDict[indexId], id)
 		}
 		delete(t.JobIndex, id)
