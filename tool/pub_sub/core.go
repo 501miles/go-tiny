@@ -11,8 +11,71 @@ import (
 )
 
 const (
-	ExchangeName = "Go-Sub-Pub-Exchange"
+	ExchangeName       = "Go-Sub-Pub-Exchange"
+	ExchangeNameBackup = "Go-Sub-Pub-Exchange-Backup"
 )
+
+func init() {
+	go func() {
+		time.Sleep(2 * time.Second)
+
+		ch := rabbit.GetChan()
+		err := ch.ExchangeDeclare(
+			ExchangeNameBackup,
+			"fanout",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+
+		if err != nil {
+			logger.Error(err)
+		}
+
+		q, err := ch.QueueDeclare(
+			"",
+			true,
+			false,
+			true,
+			false,
+			nil,
+		)
+
+		if err != nil {
+			logger.Error(err)
+		}
+
+		err = ch.QueueBind(
+			q.Name,
+			"",
+			ExchangeName,
+			false,
+			nil,
+		)
+		if err != nil {
+			logger.Error(err)
+		}
+
+		msgs, err := ch.Consume(
+			q.Name,
+			"",
+			false,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			logger.Error(err)
+		}
+
+		for d := range msgs {
+			logger.Info(d)
+		}
+	}()
+}
 
 type ReSendMsg struct {
 	RetryTimes    uint8
@@ -104,6 +167,7 @@ func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args
 		logger.Info("订阅结束")
 		close(dataChan)
 		close(done)
+		return
 	}()
 }
 
