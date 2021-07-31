@@ -1,12 +1,16 @@
 package pub_sub
 
 import (
+	"fmt"
 	"github.com/501miles/go-tiny/tool/mq/rabbit"
 	"github.com/501miles/logger"
+	"github.com/Jeffail/tunny"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/streadway/amqp"
 	"github.com/tidwall/gjson"
 	"reflect"
+	"runtime"
+	"sync"
 	"time"
 )
 
@@ -15,7 +19,20 @@ const (
 	ExchangeNameBackup = "Go-Sub-Pub-Exchange-Backup"
 )
 
+//var topicThreadPool sync.Map
+//var pool1 *tunny.Pool
+
+var pubPoolDict map[string]*tunny.Pool
+var lock sync.RWMutex
+
 func init() {
+	//numCPUs := runtime.NumCPU()
+	//pool1 = tunny.NewFunc(numCPUs, func(payload interface{}) interface{} {
+	//	pubProcess("test", payload)
+	//	return nil
+	//})
+	//pool1.SetSize(5) // 100 goroutines
+	pubPoolDict = make(map[string]*tunny.Pool)
 	go func() {
 		time.Sleep(2 * time.Second)
 
@@ -83,7 +100,10 @@ type ReSendMsg struct {
 	Data          interface{}
 }
 
-func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args ...interface{}) {
+type OnMessageReceive func(data interface{}) bool
+
+func Subscribe(topic string, onMessageReceive OnMessageReceive, args ...interface{}) <-chan struct{} {
+	var done chan struct{}
 	go func() {
 		ch := rabbit.GetChan()
 		err := ch.ExchangeDeclare(
@@ -140,9 +160,13 @@ func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args
 		for {
 			select {
 			case d := <-msgs:
-				logger.Debug(jsoniter.MarshalToString(d))
 				var result interface{}
 				if d.Exchange == "" || len(d.Body) == 0 {
+					logger.Info("AAAABBBCCCDDDD")
+					logger.Debug(jsoniter.MarshalToString(d))
+					//if time.Now().Unix() % 7 == 0 {
+					//	time.Sleep(10000 * time.Second)
+					//}
 					continue
 				}
 				if len(args) > 0 {
@@ -156,7 +180,33 @@ func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args
 				} else {
 					result = d.Body
 				}
-				dataChan <- result
+				go func(r2 interface{}, d2 amqp.Delivery) {
+					ok := onMessageReceive(r2)
+					if ok {
+						tryCount := 0
+					RetryAck:
+						err = d2.Acknowledger.Ack(d.DeliveryTag, false)
+						if err != nil {
+							logger.Error(err)
+							tryCount++
+							if tryCount < 3 {
+								goto RetryAck
+							}
+						}
+					} else {
+						tryCount := 0
+					RetryReject:
+						err = d2.Acknowledger.Reject(d2.DeliveryTag, false)
+						if err != nil {
+							logger.Error(err)
+							tryCount++
+							if tryCount < 3 {
+								goto RetryReject
+							}
+						}
+					}
+				}(result, d)
+
 			case <-done:
 				logger.Info("收到结束订阅消息")
 				goto END
@@ -165,13 +215,46 @@ func Subscribe(topic string, dataChan chan interface{}, done chan struct{}, args
 
 	END:
 		logger.Info("订阅结束")
-		close(dataChan)
 		close(done)
 		return
 	}()
+	return done
 }
 
 func Publish(topic string, data interface{}) error {
+	go func() {
+		lock.RLock()
+		defer lock.RUnlock()
+		pool := getThreadPool(topic)
+		logger.Error(fmt.Sprintf("%p", pool))
+		pool.Process(data)
+	}()
+	return nil
+}
+
+func getThreadPool(topic string) *tunny.Pool {
+	p, ok := pubPoolDict[topic]
+	if ok {
+		return p
+	}
+	lock.RUnlock()
+	lock.Lock()
+	defer func() {
+		lock.Unlock()
+		lock.RLock()
+	}()
+	numCPUs := runtime.NumCPU()
+	logger.Info(numCPUs)
+	pool := tunny.NewFunc(numCPUs, func(payload interface{}) interface{} {
+		pubProcess(topic, payload)
+		return nil
+	})
+	pool.SetSize(100)
+	pubPoolDict[topic] = pool
+	return pool
+}
+
+func pubProcess(topic string, data interface{}) {
 	ch := rabbit.GetChan()
 	err := ch.ExchangeDeclare(
 		ExchangeName,
@@ -184,7 +267,6 @@ func Publish(topic string, data interface{}) error {
 	)
 	if err != nil {
 		logger.Error(err)
-		return err
 	}
 
 	body, _ := jsoniter.Marshal(data)
@@ -204,28 +286,27 @@ func Publish(topic string, data interface{}) error {
 	}
 	returnChan := make(chan amqp.Return)
 	ch.NotifyReturn(returnChan)
-
-	go func() {
-		for {
-			select {
-			case d := <-returnChan:
-				logger.Info("收到return消息")
-				logger.Info(d.ReplyCode)
-				logger.Info(d.ReplyText)
-				logger.Info(d.Exchange)
-				logger.Info(d.RoutingKey)
-				logger.Info(d.Headers)
-				logger.Info(string(d.Body))
-				//dataChan <- d.Body
-				logger.Info("aa")
-			case <-time.After(10 * time.Second):
-				//logger.Info("超时10秒")
-				//close(returnChan)
-				return
-			}
-		}
-	}()
-	return err
+	time.Sleep(1 * time.Second)
+	//go func() {
+	//	for {
+	//		select {
+	//		case d := <-returnChan:
+	//			logger.Info("收到return消息")
+	//			logger.Info(d.ReplyCode)
+	//			logger.Info(d.ReplyText)
+	//			logger.Info(d.Exchange)
+	//			logger.Info(d.RoutingKey)
+	//			logger.Info(d.Headers)
+	//			logger.Info(string(d.Body))
+	//			//dataChan <- d.Body
+	//			logger.Info("aa")
+	//		case <-time.After(10 * time.Second):
+	//			//logger.Info("超时10秒")
+	//			//close(returnChan)
+	//			return
+	//		}
+	//	}
+	//}()
 }
 
 func covertDataToType2(data []byte, m interface{}) interface{} {

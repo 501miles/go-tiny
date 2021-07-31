@@ -14,7 +14,7 @@ func Test(t *testing.T) {
 		logger.Error(err)
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		logger.Info(i)
 		func(i2 int) {
 			timeline.Register(time.Now().Add(time.Duration(i)*time.Second), func() {

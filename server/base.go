@@ -24,8 +24,17 @@ func (b *BaseService) Port() string {
 	return b.port
 }
 
-func (b *BaseService) Start() error {
+func (b *BaseService) Init() error {
 	return nil
+}
+
+func (b *BaseService) Start() error {
+	b.RegisterService()
+	return nil
+}
+
+func (b *BaseService) RegisterService() {
+	RegisterToConsul()
 }
 
 func (b *BaseService) Shutdown() error {

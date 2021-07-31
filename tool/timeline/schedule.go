@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	TIMELINE_ERROR_ALREADY_STARTED = errors.New("Timeline already started.")
+	TIMELINE_ERROR_ALREADY_STARTED = errors.New("timeline already started")
 )
 
 type Timeline struct {
