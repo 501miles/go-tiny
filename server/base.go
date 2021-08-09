@@ -44,6 +44,8 @@ func (b *BaseService) Init() error {
 	b.ip = "192.168.1.233"
 
 	//TODO 从config文件读取配置并赋值
+
+
 	config := api.DefaultConfig()
 	config.Address = "www.evan0.xyz:8501"
 	config.Token = "7f85db13-c45f-f619-3acc-756d2d9af9cf"
