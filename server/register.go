@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/501miles/logger"
+	"github.com/hashicorp/consul/api"
 	jsoniter "github.com/json-iterator/go"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +13,16 @@ var url = "http://www.evan0.xyz:8501/v1"
 var registerUrl = url + "/agent/service/register"
 
 func RegisterToConsul() {
+	config := api.DefaultConfig()
+	config.Address = "http://www.evan0.xyz:8501/v1"
+	client, err := api.NewClient(config)
+	if err != nil {
+		logger.Error(err)
+	}
+	logger.Info(client)
+}
+
+func RegisterToConsul2() {
 	param := map[string]interface{}{
 		"ID": "redis2",
 		"Name": "redis2",

@@ -19,23 +19,21 @@ const (
 	ExchangeNameBackup = "Go-Sub-Pub-Exchange-Backup"
 )
 
-//var topicThreadPool sync.Map
-//var pool1 *tunny.Pool
-
 var pubPoolDict map[string]*tunny.Pool
 var lock sync.RWMutex
 
-func init() {
-	//numCPUs := runtime.NumCPU()
-	//pool1 = tunny.NewFunc(numCPUs, func(payload interface{}) interface{} {
-	//	pubProcess("test", payload)
-	//	return nil
-	//})
-	//pool1.SetSize(5) // 100 goroutines
+type ReSendMsg struct {
+	RetryTimes    uint8
+	NextRetryTime int64
+	Data          interface{}
+}
+
+type OnMessageReceive func(data interface{}) bool
+
+func Init() {
 	pubPoolDict = make(map[string]*tunny.Pool)
 	go func() {
-		time.Sleep(2 * time.Second)
-
+		//监听backup交换机
 		ch := rabbit.GetChan()
 		err := ch.ExchangeDeclare(
 			ExchangeNameBackup,
@@ -93,14 +91,6 @@ func init() {
 		}
 	}()
 }
-
-type ReSendMsg struct {
-	RetryTimes    uint8
-	NextRetryTime int64
-	Data          interface{}
-}
-
-type OnMessageReceive func(data interface{}) bool
 
 func Subscribe(topic string, onMessageReceive OnMessageReceive, args ...interface{}) <-chan struct{} {
 	var done chan struct{}

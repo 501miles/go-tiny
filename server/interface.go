@@ -4,10 +4,13 @@ type MService interface {
 	Name() string
 	SID() uint32
 	IP() string
-	Port() string
+	Port() uint16
 	Init() error
-	RegisterService()
+	RegisterService() error
+	DeregisterService()
+	ServeCallback() error
 	Start() error
 	Shutdown() error
 	Ping() uint8
+	IsSecure() bool
 }

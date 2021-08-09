@@ -1,7 +1,19 @@
 package server
 
-import "testing"
+import (
+	"github.com/501miles/logger"
+	"testing"
+)
 
 func Test1(t *testing.T)  {
-	RegisterToConsul()
+	s1 := new(BaseService)
+	err := s1.Init()
+	if err != nil {
+		logger.Error(err)
+	}
+	err = s1.Start()
+	if err != nil {
+		logger.Error(err)
+	}
+	select {}
 }
