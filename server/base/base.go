@@ -1,10 +1,13 @@
-package server
+package base
 
 import (
 	"fmt"
 	"github.com/501miles/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/consul/api"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"log"
 )
 
 type BaseService struct {
@@ -44,7 +47,18 @@ func (b *BaseService) Init() error {
 	b.ip = "192.168.1.233"
 
 	//TODO 从config文件读取配置并赋值
+	serviceConfig := BaseConfig{}
+	yamlFile, err := ioutil.ReadFile("conf.yaml")
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+	}
 
+	err = yaml.Unmarshal(yamlFile, &serviceConfig)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+
+	logger.Info(serviceConfig)
 
 	config := api.DefaultConfig()
 	config.Address = "www.evan0.xyz:8501"

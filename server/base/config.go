@@ -1,4 +1,4 @@
-package server
+package base
 
 type Config struct {
 	BaseConfig BaseConfig

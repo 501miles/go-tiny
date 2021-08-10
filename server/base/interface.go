@@ -1,4 +1,4 @@
-package server
+package base
 
 type MService interface {
 	Name() string
