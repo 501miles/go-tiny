@@ -11,12 +11,12 @@ import (
 )
 
 type BaseService struct {
-	name   string
-	sid    uint32
-	ip     string
-	port   uint16
-	secure bool
-	config interface{}
+	name         string
+	sid          uint32
+	ip           string
+	port         uint16
+	secure       bool
+	config       interface{}
 	consulClient *api.Client
 }
 
@@ -79,7 +79,7 @@ func (b *BaseService) ServeCallback() error {
 		logger.Info(urlPath)
 		// 健康检测接口，其实只要是 200 就认为成功了
 		r.GET(urlPath, func(c *gin.Context) {
-			c.JSON(200,nil)
+			c.JSON(200, nil)
 		})
 		err := r.Run(":8090")
 		if err != nil {
@@ -135,4 +135,8 @@ func (b *BaseService) Shutdown() error {
 
 func (b *BaseService) Ping() uint8 {
 	return 1
+}
+
+func (b *BaseService) Version() string {
+	return "1.0"
 }

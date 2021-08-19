@@ -13,4 +13,5 @@ type MService interface {
 	Shutdown() error
 	Ping() uint8
 	IsSecure() bool
+	Version() string
 }
