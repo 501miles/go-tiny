@@ -2,9 +2,9 @@ package base
 
 import (
 	"fmt"
-	"github.com/501miles/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/consul/api"
+	logger "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"

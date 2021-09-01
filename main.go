@@ -1,6 +1,6 @@
 package main
 
-//import "github.com/501miles/logger"
+//import logger "github.com/sirupsen/logrus"
 import "github.com/gin-gonic/gin"
 
 

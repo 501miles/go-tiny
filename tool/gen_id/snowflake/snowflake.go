@@ -2,7 +2,7 @@ package snowflake
 
 import (
 	"errors"
-	"github.com/501miles/logger"
+	logger "github.com/sirupsen/logrus"
 	"strconv"
 	"sync"
 	"time"

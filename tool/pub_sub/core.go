@@ -3,7 +3,7 @@ package pub_sub
 import (
 	"fmt"
 	"github.com/501miles/go-tiny/tool/mq/rabbit"
-	"github.com/501miles/logger"
+	logger "github.com/sirupsen/logrus"
 	"github.com/Jeffail/tunny"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/streadway/amqp"

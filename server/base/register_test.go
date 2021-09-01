@@ -1,7 +1,7 @@
 package base
 
 import (
-	"github.com/501miles/logger"
+	logger "github.com/sirupsen/logrus"
 	"testing"
 )
 

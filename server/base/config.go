@@ -11,7 +11,8 @@ type BaseConfig struct {
 	Name string
 	Ip string
 	Port int
-	ServiceId int
+	InstanceId int
+	ServerId int
 }
 
 type MysqlConfig struct {
