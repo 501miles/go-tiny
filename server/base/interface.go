@@ -14,4 +14,5 @@ type MService interface {
 	Ping() uint8
 	IsSecure() bool
 	Version() string
+	StartRPCServer() error
 }

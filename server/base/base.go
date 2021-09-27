@@ -1,18 +1,25 @@
 package base
 
 import (
+	"context"
 	"fmt"
+	"github.com/501miles/go-tiny/rpc/message"
+	"github.com/501miles/go-tiny/tool/logx"
+	"github.com/501miles/go-tiny/tool/time_tool"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/consul/api"
 	logger "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+	"net"
 )
 
 type BaseService struct {
 	name         string
-	sid          uint32
+	instanceId   uint32
+	serverId     uint32
 	ip           string
 	port         uint16
 	secure       bool
@@ -25,7 +32,7 @@ func (b *BaseService) Name() string {
 }
 
 func (b *BaseService) SID() uint32 {
-	return b.sid
+	return b.instanceId
 }
 
 func (b *BaseService) IP() string {
@@ -41,9 +48,10 @@ func (b *BaseService) IsSecure() bool {
 }
 
 func (b *BaseService) Init() error {
+	logx.Init()
 	b.port = 12306
 	b.name = "test1"
-	b.sid = 112233
+	b.instanceId = 112233
 	b.ip = "192.168.1.233"
 
 	//TODO 从config文件读取配置并赋值
@@ -92,9 +100,15 @@ func (b *BaseService) ServeCallback() error {
 func (b *BaseService) Start() error {
 	err := b.ServeCallback()
 	if err != nil {
-		return err
+		return fmt.Errorf("ServeCallback start faild: %v", err)
 	}
-	return b.RegisterService()
+	//err = b.RegisterService()
+	//if err != nil {
+	//	return fmt.Errorf("RegisterService start faild: %v", err)
+	//
+	//}
+	err = b.StartRPCServer()
+	return err
 }
 
 func (b *BaseService) RegisterService() error {
@@ -121,6 +135,20 @@ func (b *BaseService) RegisterService() error {
 	return nil
 }
 
+func (b *BaseService) StartRPCServer() error {
+	lis, err := net.Listen("tcp", ":9999")
+	if err != nil {
+		return fmt.Errorf("failed to listen: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+	message.RegisterGatewayServiceServer(grpcServer, b)
+	err = grpcServer.Serve(lis)
+	if err != nil {
+		return fmt.Errorf("failed to serve: %v", err)
+	}
+	return nil
+}
+
 func (b *BaseService) DeregisterService() {
 	logger.Info("DeregisterService")
 	err := b.consulClient.Agent().ServiceDeregister(fmt.Sprintf("%s-%d", b.Name(), b.SID()))
@@ -139,4 +167,14 @@ func (b *BaseService) Ping() uint8 {
 
 func (b *BaseService) Version() string {
 	return "1.0"
+}
+
+
+func (b *BaseService) RequestService(ctx context.Context, in *message.GatewayMsg) (*message.ResMsg, error) {
+	logger.Info("调用RequestService")
+	return &message.ResMsg{
+		MsgId:        in.MsgId,
+		T:            time_tool.NowTimeUnix13(),
+		ResponseData: nil,
+	}, nil
 }

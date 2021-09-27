@@ -1,42 +1,25 @@
 package base
 
+import (
+	"github.com/501miles/go-tiny/model"
+)
+
 type Config struct {
 	BaseConfig BaseConfig
-	MysqlConfig MysqlConfig
-	RedisConfig RedisConfig
-	MongoConfig MongoConfig
+	MysqlConfig model.MysqlConfig
+	RedisConfig model.RedisConfig
+	MongoConfig model.MongoConfig
 }
 
 type BaseConfig struct {
-	Name string
-	Ip string
-	Port int
-	InstanceId int
-	ServerId int
+	Name string `yaml:"name"`
+	Ip string `yaml:"ip"`
+	Port int `yaml:"port"`
+	InstanceId int `yaml:"instance_id"`
+	ServerId int `yaml:"server_id"`
 }
 
-type MysqlConfig struct {
-	Ip string
-	Port int
-	Name string
-	User string
-	Pwd string
-}
 
-type RedisConfig struct {
-	Ip string
-	Port int
-	Pwd string
-	DbNum int
-}
-
-type MongoConfig struct {
-	Ip string
-	Port int
-	Name string
-	User string
-	Pwd string
-}
 
 func readConfig() {
 

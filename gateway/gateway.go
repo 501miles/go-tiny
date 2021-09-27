@@ -3,8 +3,11 @@ package gateway
 import (
 	"errors"
 	"fmt"
+	"github.com/501miles/go-tiny/gateway/rpc"
+	"github.com/501miles/go-tiny/model"
 	"github.com/501miles/go-tiny/tool/logx"
 	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/consul/api"
 	logger "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -12,11 +15,14 @@ import (
 )
 
 type GateWay struct {
-	IP         string
-	Port       string
-	InstanceId int
-	ServerId   int
-	Services   sync.Map
+	IP            string
+	Port          string
+	InstanceId    int
+	ServerId      int
+	slock         sync.RWMutex
+	ClientManager *rpc.ClientManager
+	ServiceMap    map[string][]*model.Service
+	consulClient  *api.Client
 }
 
 var gateWayConfig Config
@@ -27,7 +33,8 @@ func NewGateway() *GateWay {
 		Port:       "",
 		InstanceId: 0,
 		ServerId:   0,
-		Services:   sync.Map{},
+		ServiceMap: map[string][]*model.Service{},
+		ClientManager: rpc.NewClientManager(),
 	}
 }
 
@@ -43,17 +50,21 @@ func (g *GateWay) Init() error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("Unmarshal: %v ", err))
 	}
-	g.IP = gateWayConfig.Ip
-	g.Port = gateWayConfig.Port
-	g.InstanceId = gateWayConfig.InstanceId
-	g.ServerId = gateWayConfig.ServerId
+	g.IP = gateWayConfig.BaseConfig.Ip
+	g.Port = gateWayConfig.BaseConfig.Port
+	g.InstanceId = gateWayConfig.BaseConfig.InstanceId
+	g.ServerId = gateWayConfig.BaseConfig.ServerId
 	return nil
 }
 
 func (g *GateWay) Run() {
 	logger.Infof("gateway instance_id: %d, server_id %d, is running...", g.InstanceId, g.ServerId)
 	r := gin.Default()
-	err := r.Run(fmt.Sprintf("%s: %s", gateWayConfig.Ip, gateWayConfig.Port))
+	//TODO 动态注册路由?
+	r.GET("/v1/query", func(context *gin.Context) {
+		context.Writer.WriteString("ok")
+	})
+	err := r.Run(fmt.Sprintf("%s: %s", gateWayConfig.BaseConfig.Ip, gateWayConfig.BaseConfig.Port))
 	if err != nil {
 		logger.Fatalf("gateway instance_id: %d, server_id %d, fail to start", g.InstanceId, g.ServerId)
 	}
@@ -76,7 +87,28 @@ func corsMiddleware() gin.HandlerFunc {
 
 //开始从consul获取注册在相同serverId下的微服务
 func monitorMService() {
+	//
 
 }
 
+func (g *GateWay) registerMService(s *model.Service) {
+	g.slock.Lock()
+	defer g.slock.Unlock()
+	list, ok := g.ServiceMap[s.Name]
+	if !ok {
+		list = make([]*model.Service, 2)
+	}
+	list = append(list, s)
+	g.ServiceMap[s.Name] = list
+}
+
+func (g *GateWay) unregisterMService() {
+	g.slock.Lock()
+	defer g.slock.Unlock()
+
+}
+
+func callRPC() {
+
+}
 

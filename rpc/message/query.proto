@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package message;
+option go_package = "./;message";
+
+message QueryParam {
+  string Key = 1;
+  map<string, string> Param = 2;
+}
