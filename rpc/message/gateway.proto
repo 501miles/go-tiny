@@ -6,13 +6,13 @@ option go_package = "./;message";
 message GatewayMsg {
   sint32 version = 1;
   int64 t = 2;
-  int32 msgId = 3;
+  int64 msgId = 3;
   bytes requestData = 4; //请求参数
   int64 userId = 5;
 }
 
 message ResMsg {
-  int32 msgId = 1;
+  int64 msgId = 1;
   int64 t = 2;
   bytes responseData = 3; //相应数据
 }

@@ -6,16 +6,22 @@ import (
 	"github.com/501miles/go-tiny/model"
 	"github.com/501miles/go-tiny/rpc/message"
 	"google.golang.org/grpc"
+	"math/rand"
 	"sync"
+	"time"
 )
 
 type ClientManager struct {
 	lock sync.RWMutex
 	serviceRPCClientDict map[uint32]*ServiceRPCClient
+	serviceRPCClientNameDict map[string][]*ServiceRPCClient
 }
 
 func NewClientManager() *ClientManager {
-	return &ClientManager{serviceRPCClientDict: map[uint32]*ServiceRPCClient{}}
+	return &ClientManager{
+		serviceRPCClientDict: map[uint32]*ServiceRPCClient{},
+		serviceRPCClientNameDict: map[string][]*ServiceRPCClient{},
+	}
 }
 
 func (cm * ClientManager) AddMService(s model.Service) error {
@@ -37,6 +43,13 @@ func (cm * ClientManager) AddMService(s model.Service) error {
 	client := message.NewGatewayServiceClient(conn)
 	sc.Client = &client
 	cm.serviceRPCClientDict[s.InstanceId] = sc
+	if list, ok := cm.serviceRPCClientNameDict[s.Name]; ok {
+		list = append(list, sc)
+		cm.serviceRPCClientNameDict[s.Name] = list
+	}else{
+		cm.serviceRPCClientNameDict[s.Name] = []*ServiceRPCClient{sc}
+	}
+
 	return nil
 }
 
@@ -44,4 +57,16 @@ func (cm * ClientManager) GetRPCClientByInstanceId(id uint32) *ServiceRPCClient 
 	cm.lock.RLock()
 	defer cm.lock.RUnlock()
 	return cm.serviceRPCClientDict[id]
+}
+
+func (cm *ClientManager) GetRPCClientByName(name string) *ServiceRPCClient {
+	//获取策略:随机
+	cm.lock.RLock()
+	defer cm.lock.RUnlock()
+	if sc, ok := cm.serviceRPCClientNameDict[name]; ok {
+		s := rand.NewSource(time.Now().Unix())
+		r := rand.New(s)
+		return sc[r.Intn(len(sc))]
+	}
+	return nil
 }

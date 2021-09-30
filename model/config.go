@@ -24,7 +24,7 @@ type MongoConfig struct {
 }
 
 type ConsulConfig struct {
-	IP string `yaml:"ip"`
-	Port int `yaml:"port"`
+	IP    string `yaml:"ip"`
+	Port  uint16 `yaml:"port"`
 	Token string `yaml:"token"`
 }

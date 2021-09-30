@@ -11,7 +11,7 @@ type Config struct {
 
 type BaseConfig struct {
 	Ip         string `yaml:"ip"`
-	Port       string `yaml:"port"`
-	InstanceId int    `yaml:"instance_id"`
-	ServerId   int    `yaml:"server_id"`
+	Port       uint16 `yaml:"port"`
+	InstanceId uint32 `yaml:"instance_id"`
+	ServerId   uint32 `yaml:"server_id"`
 }

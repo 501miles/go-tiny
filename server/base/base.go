@@ -23,7 +23,7 @@ type BaseService struct {
 	ip           string
 	port         uint16
 	secure       bool
-	config       interface{}
+	config       Config
 	consulClient *api.Client
 }
 
@@ -49,14 +49,8 @@ func (b *BaseService) IsSecure() bool {
 
 func (b *BaseService) Init() error {
 	logx.Init()
-	b.port = 12306
-	b.name = "test1"
-	b.instanceId = 112233
-	b.ip = "192.168.1.233"
-
-	//TODO 从config文件读取配置并赋值
-	serviceConfig := BaseConfig{}
-	yamlFile, err := ioutil.ReadFile("conf.yaml")
+	serviceConfig := Config{}
+	yamlFile, err := ioutil.ReadFile(Default_Config_Name)
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
 	}
@@ -66,11 +60,18 @@ func (b *BaseService) Init() error {
 		log.Fatalf("Unmarshal: %v", err)
 	}
 
-	logger.Info(serviceConfig)
+	b.config = serviceConfig
+	b.port = serviceConfig.BaseConfig.Port
+	b.name = serviceConfig.BaseConfig.Name
+	b.instanceId = serviceConfig.BaseConfig.InstanceId
+	b.ip = serviceConfig.BaseConfig.Ip
 
 	config := api.DefaultConfig()
-	config.Address = "www.evan0.xyz:8501"
-	config.Token = "7f85db13-c45f-f619-3acc-756d2d9af9cf"
+	config.Address = serviceConfig.ConsulConfig.IP
+	if serviceConfig.ConsulConfig.Port > 0 {
+		config.Address = fmt.Sprintf("%s:%d",config.Address, serviceConfig.ConsulConfig.Port)
+	}
+	config.Token = serviceConfig.ConsulConfig.Token
 	c, err := api.NewClient(config)
 	if err != nil {
 		return err
@@ -172,9 +173,15 @@ func (b *BaseService) Version() string {
 
 func (b *BaseService) RequestService(ctx context.Context, in *message.GatewayMsg) (*message.ResMsg, error) {
 	logger.Info("调用RequestService")
+	bs := b.ProcessRPCData(in)
 	return &message.ResMsg{
 		MsgId:        in.MsgId,
 		T:            time_tool.NowTimeUnix13(),
-		ResponseData: nil,
+		ResponseData: bs,
 	}, nil
+}
+
+func (b *BaseService) ProcessRPCData(msg *message.GatewayMsg) []byte {
+	var bs []byte
+	return bs
 }
