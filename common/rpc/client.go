@@ -8,7 +8,7 @@ import (
 
 type ServiceRPCClient struct {
 	Conn *grpc.ClientConn
-	Client *message.GatewayServiceClient
+	Client *message.GatewayProtocolClient
 	ServiceName string
 	ServiceInstanceId uint32
 	RequestMessage proto.Message

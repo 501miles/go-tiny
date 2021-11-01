@@ -14,7 +14,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -24,195 +23,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type GatewayMsg struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Version     int32  `protobuf:"zigzag32,1,opt,name=version,proto3" json:"version,omitempty"`
-	T           int64  `protobuf:"varint,2,opt,name=t,proto3" json:"t,omitempty"`
-	MsgId       int64  `protobuf:"varint,3,opt,name=msgId,proto3" json:"msgId,omitempty"`
-	RequestData []byte `protobuf:"bytes,4,opt,name=requestData,proto3" json:"requestData,omitempty"` //请求参数
-	UserId      int64  `protobuf:"varint,5,opt,name=userId,proto3" json:"userId,omitempty"`
-}
-
-func (x *GatewayMsg) Reset() {
-	*x = GatewayMsg{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_gateway_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GatewayMsg) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GatewayMsg) ProtoMessage() {}
-
-func (x *GatewayMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GatewayMsg.ProtoReflect.Descriptor instead.
-func (*GatewayMsg) Descriptor() ([]byte, []int) {
-	return file_gateway_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *GatewayMsg) GetVersion() int32 {
-	if x != nil {
-		return x.Version
-	}
-	return 0
-}
-
-func (x *GatewayMsg) GetT() int64 {
-	if x != nil {
-		return x.T
-	}
-	return 0
-}
-
-func (x *GatewayMsg) GetMsgId() int64 {
-	if x != nil {
-		return x.MsgId
-	}
-	return 0
-}
-
-func (x *GatewayMsg) GetRequestData() []byte {
-	if x != nil {
-		return x.RequestData
-	}
-	return nil
-}
-
-func (x *GatewayMsg) GetUserId() int64 {
-	if x != nil {
-		return x.UserId
-	}
-	return 0
-}
-
-type ResMsg struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	MsgId        int64  `protobuf:"varint,1,opt,name=msgId,proto3" json:"msgId,omitempty"`
-	T            int64  `protobuf:"varint,2,opt,name=t,proto3" json:"t,omitempty"`
-	ResponseData []byte `protobuf:"bytes,3,opt,name=responseData,proto3" json:"responseData,omitempty"` //相应数据
-}
-
-func (x *ResMsg) Reset() {
-	*x = ResMsg{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_gateway_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ResMsg) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ResMsg) ProtoMessage() {}
-
-func (x *ResMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ResMsg.ProtoReflect.Descriptor instead.
-func (*ResMsg) Descriptor() ([]byte, []int) {
-	return file_gateway_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *ResMsg) GetMsgId() int64 {
-	if x != nil {
-		return x.MsgId
-	}
-	return 0
-}
-
-func (x *ResMsg) GetT() int64 {
-	if x != nil {
-		return x.T
-	}
-	return 0
-}
-
-func (x *ResMsg) GetResponseData() []byte {
-	if x != nil {
-		return x.ResponseData
-	}
-	return nil
-}
-
 var File_gateway_proto protoreflect.FileDescriptor
 
 var file_gateway_proto_rawDesc = []byte{
 	0x0a, 0x0d, 0x67, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
-	0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x84, 0x01, 0x0a, 0x0a, 0x47, 0x61, 0x74,
-	0x65, 0x77, 0x61, 0x79, 0x4d, 0x73, 0x67, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69,
-	0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x11, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f,
-	0x6e, 0x12, 0x0c, 0x0a, 0x01, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x01, 0x74, 0x12,
-	0x14, 0x0a, 0x05, 0x6d, 0x73, 0x67, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05,
-	0x6d, 0x73, 0x67, 0x49, 0x64, 0x12, 0x20, 0x0a, 0x0b, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x44, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0b, 0x72, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x44, 0x61, 0x74, 0x61, 0x12, 0x16, 0x0a, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49,
-	0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x22,
-	0x50, 0x0a, 0x06, 0x52, 0x65, 0x73, 0x4d, 0x73, 0x67, 0x12, 0x14, 0x0a, 0x05, 0x6d, 0x73, 0x67,
-	0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x6d, 0x73, 0x67, 0x49, 0x64, 0x12,
-	0x0c, 0x0a, 0x01, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x01, 0x74, 0x12, 0x22, 0x0a,
-	0x0c, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x44, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x0c, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x44, 0x61, 0x74,
-	0x61, 0x32, 0x4a, 0x0a, 0x0e, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x53, 0x65, 0x72, 0x76,
-	0x69, 0x63, 0x65, 0x12, 0x38, 0x0a, 0x0e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x53, 0x65,
-	0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x13, 0x2e, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e,
-	0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x4d, 0x73, 0x67, 0x1a, 0x0f, 0x2e, 0x6d, 0x65, 0x73,
+	0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x32, 0x47, 0x0a, 0x0f, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x34, 0x0a, 0x0e, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x0f, 0x2e, 0x6d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x2e, 0x52, 0x65, 0x71, 0x4d, 0x73, 0x67, 0x1a, 0x0f, 0x2e, 0x6d, 0x65, 0x73,
 	0x73, 0x61, 0x67, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x4d, 0x73, 0x67, 0x22, 0x00, 0x42, 0x0c, 0x5a,
 	0x0a, 0x2e, 0x2f, 0x3b, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x33,
 }
 
-var (
-	file_gateway_proto_rawDescOnce sync.Once
-	file_gateway_proto_rawDescData = file_gateway_proto_rawDesc
-)
-
-func file_gateway_proto_rawDescGZIP() []byte {
-	file_gateway_proto_rawDescOnce.Do(func() {
-		file_gateway_proto_rawDescData = protoimpl.X.CompressGZIP(file_gateway_proto_rawDescData)
-	})
-	return file_gateway_proto_rawDescData
-}
-
-var file_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_gateway_proto_goTypes = []interface{}{
-	(*GatewayMsg)(nil), // 0: message.GatewayMsg
-	(*ResMsg)(nil),     // 1: message.ResMsg
+	(*ReqMsg)(nil), // 0: message.ReqMsg
+	(*ResMsg)(nil), // 1: message.ResMsg
 }
 var file_gateway_proto_depIdxs = []int32{
-	0, // 0: message.GatewayService.RequestService:input_type -> message.GatewayMsg
-	1, // 1: message.GatewayService.RequestService:output_type -> message.ResMsg
+	0, // 0: message.GatewayProtocol.RequestService:input_type -> message.ReqMsg
+	1, // 1: message.GatewayProtocol.RequestService:output_type -> message.ResMsg
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -225,45 +56,19 @@ func file_gateway_proto_init() {
 	if File_gateway_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_gateway_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GatewayMsg); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_gateway_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ResMsg); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
+	file_base_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_gateway_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_gateway_proto_goTypes,
 		DependencyIndexes: file_gateway_proto_depIdxs,
-		MessageInfos:      file_gateway_proto_msgTypes,
 	}.Build()
 	File_gateway_proto = out.File
 	file_gateway_proto_rawDesc = nil
@@ -279,72 +84,72 @@ var _ grpc.ClientConnInterface
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion6
 
-// GatewayServiceClient is the client API for GatewayService service.
+// GatewayProtocolClient is the client API for GatewayProtocol service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type GatewayServiceClient interface {
-	RequestService(ctx context.Context, in *GatewayMsg, opts ...grpc.CallOption) (*ResMsg, error)
+type GatewayProtocolClient interface {
+	RequestService(ctx context.Context, in *ReqMsg, opts ...grpc.CallOption) (*ResMsg, error)
 }
 
-type gatewayServiceClient struct {
+type gatewayProtocolClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewGatewayServiceClient(cc grpc.ClientConnInterface) GatewayServiceClient {
-	return &gatewayServiceClient{cc}
+func NewGatewayProtocolClient(cc grpc.ClientConnInterface) GatewayProtocolClient {
+	return &gatewayProtocolClient{cc}
 }
 
-func (c *gatewayServiceClient) RequestService(ctx context.Context, in *GatewayMsg, opts ...grpc.CallOption) (*ResMsg, error) {
+func (c *gatewayProtocolClient) RequestService(ctx context.Context, in *ReqMsg, opts ...grpc.CallOption) (*ResMsg, error) {
 	out := new(ResMsg)
-	err := c.cc.Invoke(ctx, "/message.GatewayService/RequestService", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/message.GatewayProtocol/RequestService", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// GatewayServiceServer is the server API for GatewayService service.
-type GatewayServiceServer interface {
-	RequestService(context.Context, *GatewayMsg) (*ResMsg, error)
+// GatewayProtocolServer is the server API for GatewayProtocol service.
+type GatewayProtocolServer interface {
+	RequestService(context.Context, *ReqMsg) (*ResMsg, error)
 }
 
-// UnimplementedGatewayServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedGatewayServiceServer struct {
+// UnimplementedGatewayProtocolServer can be embedded to have forward compatible implementations.
+type UnimplementedGatewayProtocolServer struct {
 }
 
-func (*UnimplementedGatewayServiceServer) RequestService(context.Context, *GatewayMsg) (*ResMsg, error) {
+func (*UnimplementedGatewayProtocolServer) RequestService(context.Context, *ReqMsg) (*ResMsg, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestService not implemented")
 }
 
-func RegisterGatewayServiceServer(s *grpc.Server, srv GatewayServiceServer) {
-	s.RegisterService(&_GatewayService_serviceDesc, srv)
+func RegisterGatewayProtocolServer(s *grpc.Server, srv GatewayProtocolServer) {
+	s.RegisterService(&_GatewayProtocol_serviceDesc, srv)
 }
 
-func _GatewayService_RequestService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GatewayMsg)
+func _GatewayProtocol_RequestService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReqMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GatewayServiceServer).RequestService(ctx, in)
+		return srv.(GatewayProtocolServer).RequestService(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/message.GatewayService/RequestService",
+		FullMethod: "/message.GatewayProtocol/RequestService",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServiceServer).RequestService(ctx, req.(*GatewayMsg))
+		return srv.(GatewayProtocolServer).RequestService(ctx, req.(*ReqMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _GatewayService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "message.GatewayService",
-	HandlerType: (*GatewayServiceServer)(nil),
+var _GatewayProtocol_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "message.GatewayProtocol",
+	HandlerType: (*GatewayProtocolServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "RequestService",
-			Handler:    _GatewayService_RequestService_Handler,
+			Handler:    _GatewayProtocol_RequestService_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

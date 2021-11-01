@@ -1,22 +1,8 @@
 syntax = "proto3";
-
 package message;
 option go_package = "./;message";
+import "base.proto";
 
-message GatewayMsg {
-  sint32 version = 1;
-  int64 t = 2;
-  int64 msgId = 3;
-  bytes requestData = 4; //请求参数
-  int64 userId = 5;
-}
-
-message ResMsg {
-  int64 msgId = 1;
-  int64 t = 2;
-  bytes responseData = 3; //相应数据
-}
-
-service GatewayService {
-  rpc RequestService(GatewayMsg) returns (ResMsg) {}
+service GatewayProtocol {
+  rpc RequestService(ReqMsg) returns (ResMsg) {}
 }

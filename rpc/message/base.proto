@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package message;
+option go_package = "./;message";
+
+// message RoutingMsg {
+//  uint32 FromInstanceId = 1;
+//  string FromIP = 2;
+//  uint32 FromPort = 3;
+//  uint32 ToInstanceId = 4;
+//}
+
+message ReqMsg {
+  sint32 version = 1;
+  int64 t = 2;
+  int64 msgId = 3;
+  bytes requestData = 4; //请求参数
+  int64 userId = 5;
+  uint32 source = 6; //调用来源 api gateway or 内部rpc
+  string token = 7;
+}
+
+message ReqDataMsg {
+  bytes requestData = 1;
+  int64 userId = 2;
+}
+
+message ResMsg {
+  int64 msgId = 1;
+  int64 t = 2;
+  bytes responseData = 3; //相应数据
+}

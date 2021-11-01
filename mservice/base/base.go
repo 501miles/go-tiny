@@ -173,7 +173,11 @@ func (b *BaseService) Version() string {
 
 func (b *BaseService) RequestService(ctx context.Context, in *message.GatewayMsg) (*message.ResMsg, error) {
 	logger.Info("调用RequestService")
-	bs := b.ProcessRPCData(in)
+	reqMsg := &message.ReqMsg{
+		RequestData: in.RequestData,
+		UserId:      in.UserId,
+	}
+	bs := b.ProcessRPCRequest(reqMsg)
 	return &message.ResMsg{
 		MsgId:        in.MsgId,
 		T:            time_tool.NowTimeUnix13(),
@@ -181,7 +185,7 @@ func (b *BaseService) RequestService(ctx context.Context, in *message.GatewayMsg
 	}, nil
 }
 
-func (b *BaseService) ProcessRPCData(msg *message.GatewayMsg) []byte {
+func (b *BaseService) ProcessRPCRequest(msg *message.ReqMsg) []byte {
 	var bs []byte
 	return bs
 }
